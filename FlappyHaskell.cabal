@@ -1,0 +1,19 @@
+name:                FlappyHaskell
+version:             0.1.0.0
+license:             MIT
+category:            Game
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable FlappyHaskell
+  main-is:             Main.hs
+  other-extensions:    TemplateHaskell
+  build-depends:       base >=4.8 && <4.9
+                     , random >=1.1 && <1.2
+                     , mtl >=2.2 && <2.3
+                     , lens >=4.11 && <4.12
+                     , OpenGL >=2.12 && <2.13
+                     , GLFW-b >=1.4 && <1.5
+                     , GLUtil >=0.8 && <0.9
+                     , reactive-banana >=0.8 && <0.9
+  default-language:    Haskell2010
