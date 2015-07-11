@@ -1,10 +1,3 @@
-{- TODO
- - fix bird rotating
- - GameStart
- - Pipe Count
- - GameOver
- -}
-
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
@@ -109,29 +102,29 @@ setupNetwork addHandler statesRef = compile $ do
     let moveBird keyState = do
             states <- readIORef statesRef
             let bird = move $ if keyState == KeyPressed
-                                  then states ^. stBird & spSpeed.vecY .~ 7
-                                  else states ^. stBird & spSpeed.vecY -~ 0.5
-            let bird' = bird & spPos.vertY %~ (max 0 . min (screenHeight - (bird ^. spSize.vecY)))
+                                  then states ^. stBird & spSpeed.y .~ 7
+                                  else states ^. stBird & spSpeed.y -~ 0.5
+            let bird' = bird & spPos.y %~ (max 0 . min (screenHeight - (bird ^. spSize.y)))
             writeIORef statesRef (states & stBird .~ bird')
     let moveLand _ = do
             states <- readIORef statesRef
             let land  = move $ states ^. stLand
-            let land' = if (land ^. spPos.vertX) < negate (land ^. spSize.vecX)
-                            then land & spPos.vertX +~ (land ^. spSize.vecX)
+            let land' = if (land ^. spPos.x) < negate (land ^. spSize.x)
+                            then land & spPos.x +~ (land ^. spSize.x)
                             else land
             writeIORef statesRef (states & stLand .~ land')
     let moveSky _ = do
             states <- readIORef statesRef
             let sky  = move $ states ^. stSky
-            let sky' = if (sky ^. spPos.vertX) < negate (sky ^. spSize.vecX)
-                            then sky & spPos.vertX +~ (sky ^. spSize.vecX)
+            let sky' = if (sky ^. spPos.x) < negate (sky ^. spSize.x)
+                            then sky & spPos.x +~ (sky ^. spSize.x)
                             else sky
             writeIORef statesRef (states & stSky .~ sky')
     let movePipes n = do
             states <- readIORef statesRef
             let pipes = states ^. stPipes
             let moved = map (\(up, down) -> (move up, move down)) pipes
-            let pipes' = filter (\(up, _) -> (up^.spPos.vertX) > -60) $ moved
+            let pipes' = filter (\(up, _) -> (up^.spPos.x) > -60) $ moved
             pipes'' <- if n `mod` 200 /= 0
                           then return pipes'
                           else do
@@ -203,24 +196,24 @@ mainLoop statesRef fire window = do
         matrixMode $= Modelview 0
         case states ^. stScene of
             GameStart   -> do
-                draw  (states ^. stSky & spPos.vertX +~ (states ^. stSky.spSize.vecX))
+                draw  (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
                 draw  (states ^. stSky)
                 draw  (states ^. stLand)
                 draw  (states ^. stBird)
             GamePlaying -> do
-                draw  (states ^. stSky & spPos.vertX +~ (2 * (states ^. stSky.spSize.vecX)))
-                draw  (states ^. stSky & spPos.vertX +~ (states ^. stSky.spSize.vecX))
+                draw  (states ^. stSky & spPos.x +~ (2 * (states ^. stSky.spSize.x)))
+                draw  (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
                 draw  (states ^. stSky)
                 forM_ (states ^. stPipes) $ \(up, down) -> draw up >> draw down
-                draw  (states ^. stLand & spPos.vertX +~ (states ^. stLand.spSize.vecX))
+                draw  (states ^. stLand & spPos.x +~ (states ^. stLand.spSize.x))
                 draw  (states ^. stLand)
                 draw  (states ^. stBird)
             GameOver    -> do
-                draw  (states ^. stSky & spPos.vertX +~ (2 * (states ^. stSky.spSize.vecX)))
-                draw  (states ^. stSky & spPos.vertX +~ (states ^. stSky.spSize.vecX))
+                draw  (states ^. stSky & spPos.x +~ (2 * (states ^. stSky.spSize.x)))
+                draw  (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
                 draw  (states ^. stSky)
                 forM_ (states ^. stPipes) $ \(up, down) -> draw up >> draw down
-                draw  (states ^. stLand & spPos.vertX +~ (states ^. stLand.spSize.vecX))
+                draw  (states ^. stLand & spPos.x +~ (states ^. stLand.spSize.x))
                 draw  (states ^. stLand)
                 draw  (states ^. stBird)
 

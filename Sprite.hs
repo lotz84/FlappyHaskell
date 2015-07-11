@@ -5,7 +5,7 @@ module Sprite (
     Sprite(..),
     draw, move, hitTest,
     spTex, spPos, spSize, spSpeed,
-    vertX, vertY, vecX, vecY
+    x, y
 ) where
 
 import Control.Lens
@@ -30,17 +30,23 @@ data Sprite = Sprite {
 
 makeLenses ''Sprite
 
-vertX :: Lens (Vertex2 GLfloat) (Vertex2 GLfloat) GLfloat GLfloat
-vertX = lens (\(Vertex2 x _) -> x) (\(Vertex2 x y) x' -> Vertex2 x' y)
+class HasX v where
+    x :: Lens (v a) (v a) a a
 
-vertY :: Lens (Vertex2 GLfloat) (Vertex2 GLfloat) GLfloat GLfloat
-vertY = lens (\(Vertex2 _ y) -> y) (\(Vertex2 x y) y' -> Vertex2 x y')
+instance HasX Vertex2 where
+    x = lens (\(Vertex2 x _) -> x) (\(Vertex2 _ y) x' -> Vertex2 x' y)
 
-vecX :: Lens (Vector2 GLfloat) (Vector2 GLfloat) GLfloat GLfloat
-vecX = lens (\(Vector2 x _) -> x) (\(Vector2 x y) x' -> Vector2 x' y)
+instance HasX Vector2 where
+    x = lens (\(Vector2 x _) -> x) (\(Vector2 _ y) x' -> Vector2 x' y)
 
-vecY :: Lens (Vector2 GLfloat) (Vector2 GLfloat) GLfloat GLfloat
-vecY = lens (\(Vector2 _ y) -> y) (\(Vector2 x y) y' -> Vector2 x y')
+class HasY v where
+    y :: Lens (v a) (v a) a a
+
+instance HasY Vertex2 where
+    y = lens (\(Vertex2 _ y) -> y) (\(Vertex2 x _) y' -> Vertex2 x y')
+
+instance HasY Vector2 where
+    y = lens (\(Vector2 _ y) -> y) (\(Vector2 x _) y' -> Vector2 x y')
 
 screenWidth  = 320
 screenHeight = 480
@@ -64,10 +70,10 @@ draw sp = do
 
 move :: Sprite -> Sprite
 move sp = (`execState` sp) $ do
-    speedX <- use (spSpeed.vecX)
-    speedY <- use (spSpeed.vecY)
-    spPos.vertX += speedX
-    spPos.vertY += speedY
+    speedX <- use (spSpeed.x)
+    speedY <- use (spSpeed.y)
+    spPos.x += speedX
+    spPos.y += speedY
 
 hitTest :: Sprite -> Sprite -> Bool
 hitTest s1 s2 = let Vertex2 xmin1 ymin1 = s1 ^. spPos
