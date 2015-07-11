@@ -14,9 +14,6 @@ import qualified Graphics.UI.GLFW as GLFW
 import Reactive.Banana
 import Reactive.Banana.Frameworks
 
-screenWidth  = 320
-screenHeight = 480
-
 data GameScene = GameStart | GamePlaying | GameOver
 
 data GameTextures = MkGameTextures { _texBird01   :: TextureObject
@@ -104,7 +101,7 @@ setupNetwork addHandler statesRef = compile $ do
             let bird = move $ if keyState == KeyPressed
                                   then states ^. stBird & spSpeed.y .~ 7
                                   else states ^. stBird & spSpeed.y -~ 0.5
-            let bird' = bird & spPos.y %~ (max 0 . min (screenHeight - (bird ^. spSize.y)))
+            let bird' = bird & spPos.y %~ (max 0 . min (480 - (bird ^. spSize.y)))
             writeIORef statesRef (states & stBird .~ bird')
     let moveLand _ = do
             states <- readIORef statesRef
@@ -187,35 +184,36 @@ mainLoop statesRef fire window = do
         (width, height) <- GLFW.getFramebufferSize window
         viewport $= (Position 0 0, Size (fromIntegral width) (fromIntegral height))
         clear [ColorBuffer, DepthBuffer]
-        
+
         matrixMode $= Projection
         loadIdentity
         lookAt (Vertex3 0 0 1) (Vertex3 0 0 0) (Vector3 0 1 0)
 
+        let draw = drawInWindow width height
         states <- readIORef statesRef
         matrixMode $= Modelview 0
         case states ^. stScene of
             GameStart   -> do
-                draw  (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
-                draw  (states ^. stSky)
-                draw  (states ^. stLand)
-                draw  (states ^. stBird)
+                draw (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
+                draw (states ^. stSky)
+                draw (states ^. stLand)
+                draw (states ^. stBird)
             GamePlaying -> do
-                draw  (states ^. stSky & spPos.x +~ (2 * (states ^. stSky.spSize.x)))
-                draw  (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
-                draw  (states ^. stSky)
+                draw (states ^. stSky & spPos.x +~ (2 * (states ^. stSky.spSize.x)))
+                draw (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
+                draw (states ^. stSky)
                 forM_ (states ^. stPipes) $ \(up, down) -> draw up >> draw down
-                draw  (states ^. stLand & spPos.x +~ (states ^. stLand.spSize.x))
-                draw  (states ^. stLand)
-                draw  (states ^. stBird)
+                draw (states ^. stLand & spPos.x +~ (states ^. stLand.spSize.x))
+                draw (states ^. stLand)
+                draw (states ^. stBird)
             GameOver    -> do
-                draw  (states ^. stSky & spPos.x +~ (2 * (states ^. stSky.spSize.x)))
-                draw  (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
-                draw  (states ^. stSky)
+                draw (states ^. stSky & spPos.x +~ (2 * (states ^. stSky.spSize.x)))
+                draw (states ^. stSky & spPos.x +~ (states ^. stSky.spSize.x))
+                draw (states ^. stSky)
                 forM_ (states ^. stPipes) $ \(up, down) -> draw up >> draw down
-                draw  (states ^. stLand & spPos.x +~ (states ^. stLand.spSize.x))
-                draw  (states ^. stLand)
-                draw  (states ^. stBird)
+                draw (states ^. stLand & spPos.x +~ (states ^. stLand.spSize.x))
+                draw (states ^. stLand)
+                draw (states ^. stBird)
 
         GLFW.swapBuffers window
         GLFW.pollEvents

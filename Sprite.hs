@@ -3,14 +3,13 @@
 module Sprite (
     loadGLTextureFromFile,
     Sprite(..),
-    draw, move, hitTest,
+    drawInWindow, move, hitTest,
     spTex, spPos, spSize, spSpeed,
     x, y
 ) where
 
 import Control.Lens
 import Control.Monad.State (execState)
-
 import Graphics.Rendering.OpenGL
 import Graphics.GLUtil (readTexture, texture2DWrap)
 
@@ -30,39 +29,19 @@ data Sprite = Sprite {
 
 makeLenses ''Sprite
 
-class HasX v where
-    x :: Lens (v a) (v a) a a
-
-instance HasX Vertex2 where
-    x = lens (\(Vertex2 x _) -> x) (\(Vertex2 _ y) x' -> Vertex2 x' y)
-
-instance HasX Vector2 where
-    x = lens (\(Vector2 x _) -> x) (\(Vector2 _ y) x' -> Vector2 x' y)
-
-class HasY v where
-    y :: Lens (v a) (v a) a a
-
-instance HasY Vertex2 where
-    y = lens (\(Vertex2 _ y) -> y) (\(Vertex2 x _) y' -> Vertex2 x y')
-
-instance HasY Vector2 where
-    y = lens (\(Vector2 _ y) -> y) (\(Vector2 x _) y' -> Vector2 x y')
-
-screenWidth  = 320
-screenHeight = 480
-
-draw :: Sprite -> IO ()
-draw sp = do
+drawInWindow :: Int -> Int -> Sprite -> IO ()
+drawInWindow  width height sp = do
+    let screenWidth  = fromIntegral width / 2
+    let screenHeight = fromIntegral height / 2
     textureBinding Texture2D $= Just (sp ^.spTex)
     let (Vertex2 x y) = sp ^.spPos
     let (Vector2 w h) = sp ^.spSize
-    preservingMatrix $ do
-        renderPrimitive Quads $ do
-            n 0 0 1
-            t 0 0 >> v (2*x/screenWidth-1)      (2*(y+h)/screenHeight-1) 0
-            t 0 1 >> v (2*x/screenWidth-1)      (2*y/screenHeight-1)     0
-            t 1 1 >> v (2*(x+w)/screenWidth-1) (2*y/screenHeight-1)      0
-            t 1 0 >> v (2*(x+w)/screenWidth-1) (2*(y+h)/screenHeight-1)  0
+    preservingMatrix . renderPrimitive Quads $ do
+        n 0 0 1
+        t 0 0 >> v (2*x/screenWidth-1)      (2*(y+h)/screenHeight-1) 0
+        t 0 1 >> v (2*x/screenWidth-1)      (2*y/screenHeight-1)     0
+        t 1 1 >> v (2*(x+w)/screenWidth-1) (2*y/screenHeight-1)      0
+        t 1 0 >> v (2*(x+w)/screenWidth-1) (2*(y+h)/screenHeight-1)  0
     where
     v x y z = vertex (Vertex3 x y z :: Vertex3 GLfloat)
     n x y z = normal (Normal3 x y z :: Normal3 GLfloat)
@@ -85,3 +64,21 @@ hitTest s1 s2 = let Vertex2 xmin1 ymin1 = s1 ^. spPos
                     xmax2 = xmin2 + w2
                     ymax2 = ymin2 + h2
                 in not $ (xmin1 > xmax2) || (ymin1 > ymax2) || (xmax1 < xmin2) || (ymax1 < ymin2)
+
+class HasX v where
+    x :: Lens (v a) (v a) a a
+
+instance HasX Vertex2 where
+    x = lens (\(Vertex2 x _) -> x) (\(Vertex2 _ y) x' -> Vertex2 x' y)
+
+instance HasX Vector2 where
+    x = lens (\(Vector2 x _) -> x) (\(Vector2 _ y) x' -> Vector2 x' y)
+
+class HasY v where
+    y :: Lens (v a) (v a) a a
+
+instance HasY Vertex2 where
+    y = lens (\(Vertex2 _ y) -> y) (\(Vertex2 x _) y' -> Vertex2 x y')
+
+instance HasY Vector2 where
+    y = lens (\(Vector2 _ y) -> y) (\(Vector2 x _) y' -> Vector2 x y')
